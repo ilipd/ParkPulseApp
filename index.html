@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ParkPulse – parking map prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9e4da;--land:#f3efe6;--road:#fff;--road2:#e2dccf;--park:#cfe3c4;--water:#bfdbe6;--ink:#17252b;--mut:#5d6b70;--card:#fff;--line:#e4e0d6;--ok:#1f9d63;--mid:#d9930d;--bad:#d4432f;--ev:#0d7fc2;--wo:#b8449a;--acc:#5b4bc4;--accent:#0f5b66;--on:#fff;--ph:#10181b}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1214;--land:#1b2427;--road:#2b373b;--road2:#222d30;--park:#22392a;--water:#1d3946;--ink:#eef2f1;--mut:#9aaaae;--card:#222c30;--line:#33423f;--ok:#3ecf8e;--mid:#f0b429;--bad:#ff6b57;--ev:#4db3f0;--wo:#e07cc6;--acc:#9c8fff;--accent:#4fc3d0;--on:#0d1214;--ph:#000}}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:48px;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.intro{max-width:300px}.intro h1{font-size:34px;line-height:1.05;font-weight:800}.intro p{margin-top:12px;color:var(--mut);line-height:1.5}
+.phone{position:relative;width:390px;height:800px;max-height:96vh;border-radius:44px;border:10px solid var(--ph);overflow:hidden;background:var(--land);box-shadow:0 30px 80px #0005}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.map{position:absolute;inset:0}.map svg{width:100%;height:100%;display:block}
+.top{position:absolute;top:0;left:0;right:0;padding:16px 12px 8px;z-index:5}
+.sr{display:flex;gap:8px}.sr label{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:16px;padding:0 14px;height:46px;box-shadow:0 4px 16px #0002}
+.sr input{flex:1;border:0;background:none;font:inherit;color:var(--ink);min-width:0}
+.av{width:46px;height:46px;border-radius:16px;background:var(--accent);color:var(--on);font-weight:800;box-shadow:0 4px 16px #0002}
+.chips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chip{flex:none;background:var(--card);border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600;box-shadow:0 2px 8px #0002;border:2px solid transparent}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--on)}
+.pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;z-index:2}
+.pin .b{display:flex;gap:4px;align-items:center;background:var(--card);border:3px solid var(--c);border-radius:18px;padding:3px 8px;font-weight:800;font-size:14px;box-shadow:0 3px 10px #0004}
+.pin .b i{font-style:normal;font-size:11px;color:var(--ev);font-weight:800}
+.pin .p{margin-top:3px;font-size:11px;font-weight:800;background:var(--ink);color:var(--card);border-radius:6px;padding:1px 6px}
+.pin.sel{z-index:4}.pin.sel .b{transform:scale(1.15);background:var(--c);color:#fff}.pin.sel .b i{color:#fff}
+.pin.dim{opacity:.25}
+.me{position:absolute;left:50%;top:74%;width:18px;height:18px;margin:-9px;border-radius:50%;background:var(--ev);border:3px solid #fff;box-shadow:0 0 0 0 #0d7fc280;animation:pulse 2s infinite;z-index:1}
+.me.flash{animation:pulse .5s 3}
+@keyframes pulse{70%{box-shadow:0 0 0 22px #0d7fc200}}
+.fab{position:absolute;right:12px;z-index:3;display:flex;flex-direction:column;gap:8px}
+.fab button{width:46px;height:46px;border-radius:50%;background:var(--card);box-shadow:0 4px 14px #0003;font-size:19px}
+.fab button[aria-pressed=true]{background:var(--accent);color:var(--on)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-radius:26px 26px 0 0;box-shadow:0 -8px 30px #0003;max-height:70%;overflow-y:auto;padding:8px 16px 20px;transition:transform .25s}
+.sheet.hide{transform:translateY(105%)}
+.grab{display:block;box-sizing:content-box;width:40px;height:4px;border:10px solid transparent;background:color-mix(in srgb,var(--mut) 40%,transparent);background-clip:padding-box;border-radius:14px;margin:-6px auto 2px}.cv{width:30px;height:30px;border-radius:50%;background:var(--land);font-size:16px;line-height:1}.promo{margin-top:10px;border-radius:12px;padding:8px 12px;font-size:13px;background:color-mix(in srgb,#e8590c 14%,transparent);color:#c2410c}.tg{position:absolute;top:-9px;right:-8px;width:18px;height:18px;border-radius:50%;background:#d9480f;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px #0004}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .promo{color:#ff9a5c}}
+.h{display:flex;justify-content:space-between;gap:8px;align-items:start}.h h2{font-size:19px;line-height:1.2}.h small{color:var(--mut);font-size:13px}
+.st{font-size:12px;font-weight:800;padding:4px 10px;border-radius:12px;white-space:nowrap;background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.st.closed{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.q{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
+.q div{border-radius:14px;padding:8px 2px;text-align:center;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
+.q b{display:block;font-size:20px}.q span{font-size:11px;font-weight:600}
+.info{display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:10px 0;border-block:1px solid var(--line)}
+.info span{color:var(--mut)}.info b{display:block;color:var(--ink);font-size:15px}
+.row{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;height:46px;border-radius:14px;font-weight:800;background:var(--accent);color:var(--on)}
+.btn.o{background:none;border:2px solid var(--line);color:var(--ink)}.btn:disabled{opacity:.45;cursor:not-allowed}.nv{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin:10px 0 8px;color:var(--mut)}.nv b{color:var(--ink)}.car{position:absolute;z-index:3;width:34px;height:34px;transform:translate(-50%,-50%);pointer-events:none;--c:var(--ev)}.car[hidden]{display:none}.car.near{--c:var(--ok)}.cb{display:flex;width:34px;height:34px;border-radius:50%;background:var(--c);border:3px solid #fff;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px #0005;transition:background .4s}.cl{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:5px;background:var(--c);color:var(--on);font-size:12px;font-weight:800;border-radius:10px;padding:2px 8px;white-space:nowrap;transition:background .4s}
+.det{margin-top:12px;display:grid;gap:8px}
+.cd{border:1px solid var(--line);border-radius:14px;padding:12px;font-size:13px}
+.cd h3{font-size:14px;display:flex;justify-content:space-between;margin-bottom:6px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--c)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tags span{background:var(--land);border-radius:10px;padding:4px 9px;font-size:12px}
+.ov{position:absolute;inset:0;z-index:20;background:#000a;overflow-y:auto;display:flex;padding:16px}
+.dlg{margin:auto;background:var(--card);border-radius:24px;padding:22px;width:100%}
+.dlg h2{font-size:24px;font-weight:800}.dlg p{color:var(--mut);font-size:14px;margin:4px 0 14px}
+.f{display:block;margin-bottom:10px;font-size:13px;font-weight:600}
+.f input{display:block;width:100%;height:46px;margin-top:4px;border-radius:12px;border:2px solid var(--line);background:var(--land);color:var(--ink);padding:0 12px;font:inherit}
+.f.err input{border-color:var(--bad)}.f em{display:none;color:var(--bad);font-style:normal;font-weight:600;font-size:12px}.f.err em{display:block}
+.or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:14px 0}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+.soc{display:grid;gap:8px}.soc button{height:44px;border-radius:12px;border:2px solid var(--line);font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px}.soc svg{width:20px;height:20px;flex:none}
+.veh{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 14px}
+.veh button{border:2px solid var(--line);border-radius:14px;padding:10px 6px;font-size:13px;font-weight:600;line-height:1.3}
+.veh button[aria-pressed=true]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.veh b{display:block;font-size:20px}.veh button{position:relative}.veh button:after{content:"";position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--mut) 40%,transparent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;line-height:1;color:#fff}.veh button[aria-pressed=true]:after{content:"\2713";background:var(--ok);border-color:var(--ok)}
+.toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--card);padding:8px 14px;border-radius:14px;font-size:13px;font-weight:600;max-width:88%;text-align:center}
+@media(max-width:860px){.intro{display:none}}
+@media(max-width:500px){body{display:block}.phone{width:100%;height:100vh;height:100dvh;max-height:none;border:0;border-radius:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<div class="intro"><h1>ParkPulse</h1><p>Find a free space in nearby parking houses: standard, E-vehicle charging, women’s and wheelchair-accessible. Tap a pin for prices, hours and live availability.</p></div>
+<div class="phone" id="app">
+ <div class="map"><svg viewBox="0 0 360 780" preserveAspectRatio="none" aria-hidden="true">
+  <rect width="360" height="780" fill="var(--land)"/>
+  <path d="M0 610 Q120 560 200 640 T360 600 V680 Q260 720 190 700 T0 690Z" fill="var(--water)"/>
+  <rect x="215" y="120" width="120" height="110" rx="14" fill="var(--park)"/>
+  <rect x="20" y="380" width="90" height="80" rx="14" fill="var(--park)"/>
+  <g stroke="var(--road2)" stroke-width="14" fill="none"><path d="M0 200H360M0 340H360M0 480H360M70 0V780M190 0V780M300 0V780"/></g>
+  <g stroke="var(--road)" stroke-width="10" fill="none"><path d="M0 200H360M0 340H360M0 480H360M70 0V780M190 0V780M300 0V780"/><path d="M0 120L360 420" stroke-width="7"/></g>
+  <g stroke="var(--road2)" stroke-width="3" fill="none"><path d="M0 270H360M0 410H360M130 0V780M245 0V780"/></g>
+  <g fill="var(--mut)" font-size="9" font-weight="600" opacity=".7"><text x="78" y="196">Ludwigstraße</text><text x="196" y="336">Maximilianstraße</text><text x="8" y="476">Sendlinger Str.</text><text x="228" y="170">Stadtpark</text></g>
+  <path id="route" d="" fill="none" stroke="var(--ev)" stroke-width="5" stroke-dasharray="9 7" stroke-linecap="round"/>
+ </svg></div>
+ <div class="me" id="me" title="Your location"></div>
+ <div id="pins"></div>
+ <div class="car" id="car" hidden><span class="cl" id="cl"></span><span class="cb">🚗</span></div>
+ <div class="top">
+  <div class="sr"><label><span aria-hidden="true">🔍</span><input id="q" placeholder="Search garage or address" aria-label="Search garage or address"></label><button class="av" id="avb" aria-label="Account">⎘</button></div>
+  <div class="chips" id="chips"></div>
+ </div>
+ <div class="fab" id="fab" style="bottom:24px"><button id="rt" aria-pressed="false" aria-label="Show route">➤</button><button id="loc" aria-label="My location">◎</button></div>
+ <div class="sheet hide" id="sheet" aria-live="polite"></div>
+</div>
+<script>
+const G=[
+{id:1,n:"Parkhaus Marienplatz",a:"Rindermarkt 8",x:36.11,y:43.59,rt:[[190,577],[190,340],[130,340]],f:34,t:420,e:[6,12],w:[9,20],c:[3,8],p:3.6,d:28,h:[0,24],wk:4,am:["Camera surveillance","Lift","Card payment","Covered"],pr:{t:"Evening flat rate €5",d:"Enter after 18:00 and leave by 06:00. Valid Monday to Friday.",u:"Until 31 Dec"}},
+{id:2,n:"City Center Garage",a:"Maximilianstraße 21",x:83.33,y:31.03,rt:[[190,577],[190,480],[300,480],[300,242]],f:12,t:260,e:[0,8],w:[2,12],c:[1,6],p:4.2,d:32,h:[6,23],wk:7,am:["Attendant","Lift","Car wash"]},
+{id:3,n:"Residenz Parking",a:"Max-Joseph-Platz 3",x:19.44,y:55,rt:[[190,577],[190,480],[70,480],[70,429]],f:3,t:180,e:[2,6],w:[0,8],c:[2,4],p:2.9,d:22,h:[5,22],wk:9,am:["Lit entrances","Card payment","Bike parking"],pr:{t:"First hour free",d:"Show the app at the exit to get your first hour free. Weekends only.",u:"Until 30 Nov"}},
+{id:4,n:"Hofgarten Tiefgarage",a:"Galeriestraße 4",x:63.89,y:61.54,rt:[[190,577],[190,480],[230,480]],f:58,t:310,e:[14,24],w:[11,16],c:[5,10],p:2.5,d:19,h:[0,24],wk:12,am:["Camera surveillance","Lift","EV fast charging","Covered"],pr:{t:"20% off EV charging",d:"Discount on charging fees for E-vehicles when you park for 2 hours or more.",u:"Until 15 Jan"}}];
+const F=[["s20","20+ spaces",g=>g.f>=20],["ev","⚡ EV available",g=>g.e[0]>0],["wo","♀ Women’s",g=>g.w[0]>0],["ac","♿ Accessible",g=>g.c[0]>0],["pr","🏷 Promotions",g=>!!g.pr]];
+const S={f:new Set(),q:"",sel:null,more:false,min:false,route:false,user:null};
+const $=id=>document.getElementById(id),col=g=>g.f<5?"var(--bad)":g.f<20?"var(--mid)":"var(--ok)";
+const isOpen=g=>{const h=new Date().getHours();return g.h[0]===0&&g.h[1]===24||h>=g.h[0]&&h<g.h[1]};
+const eur=n=>"€"+n.toFixed(2),hrs=g=>g.h[1]===24?"Open 24 hours":String(g.h[0]).padStart(2,"0")+":00–"+g.h[1]+":00";
+const ok=g=>[...S.f].every(k=>F.find(f=>f[0]===k)[2](g))&&(g.n+" "+g.a).toLowerCase().includes(S.q.toLowerCase());
+function chips(){$("chips").innerHTML=F.map(f=>`<button class="chip" data-k="${f[0]}" aria-pressed="${S.f.has(f[0])}">${f[1]}</button>`).join("")}
+function pins(){$("pins").innerHTML=G.map(g=>`<button class="pin ${S.sel===g.id?"sel":""} ${ok(g)?"":"dim"}" style="left:${g.x}%;top:${g.y}%;--c:${col(g)}" data-id="${g.id}" ${ok(g)?"":'tabindex="-1"'} aria-label="${g.n}, ${g.f} spaces free"><span class="b">P ${g.f}${g.e[0]?` <i>⚡${g.e[0]}</i>`:""}</span><span class="tg" aria-label="Promotion">%</span><span class="p">${eur(g.p)}/h</span></button>`).join("");
+ const g=G.find(x=>x.id===S.sel),r=$("route");
+ r.setAttribute("d",g&&(S.route||N&&N.gid===g.id)?pathD(g):"");$("rt").setAttribute("aria-pressed",S.route)}
+function sheet(){const g=G.find(x=>x.id===S.sel),s=$("sheet");if(!g){s.className="sheet hide";return}
+ const o=isOpen(g),pc=Math.round((1-g.f/g.t)*100),st=(a,c)=>a[0]?`<b style="color:${c}">${a[0]} free</b>`:`<b style="color:var(--bad)">Full</b>`;
+ s.className="sheet";s.innerHTML=`<button class="grab" id="mn" aria-label="${S.min?"Expand":"Minimize"} details" aria-expanded="${!S.min}"></button>
+ <div class="h"><div><h2>${g.n}</h2><small>${g.a}</small></div><span style="display:flex;gap:6px;align-items:center"><span class="st ${o?"":"closed"}">${o?"Open now":"Closed"}</span><button class="cv" id="mn2" aria-label="${S.min?"Expand":"Minimize"} details">${S.min?"⌃":"⌄"}</button></span></div>
+ ${navBox(g)}${S.min?"":`<div class="q"><div style="--c:${col(g)}"><b>${g.f}</b><span>Free</span></div><div style="--c:var(--ev)"><b>${g.e[0]}</b><span>⚡ EV</span></div><div style="--c:var(--wo)"><b>${g.w[0]}</b><span>♀ Women</span></div><div style="--c:var(--acc)"><b>${g.c[0]}</b><span>♿ Access</span></div></div>
+ <div class="info"><div><span>Price</span><b>${eur(g.p)}/h · ${eur(g.d)}/day</b></div><div><span>Walk</span><b>${g.wk} min</b></div><div><span>Capacity</span><b>${g.t}</b></div></div>
+ ${g.pr?`<div class="promo">🏷 <b>${g.pr.t}</b></div>`:""}
+ <div class="row"><button class="btn" id="go"${N&&N.gid===g.id?" disabled":""}>${N&&N.gid===g.id?"Navigating\u2026":"Navigate to parking"}</button><button class="btn o" id="more" aria-expanded="${S.more}">${S.more?"Less":"Details"}</button></div>
+ ${S.more?`<div class="det">
+ <div class="cd"><h3>Occupancy <span>${pc}% full</span></h3><div class="bar" style="--c:${col(g)}"><i style="width:${pc}%"></i></div>${g.f} of ${g.t} spaces free</div>
+ <div class="cd" style="--c:var(--ev)"><h3>⚡ EV charging ${st(g.e,"var(--ev)")}</h3>${g.e[0]} of ${g.e[1]} charging bays available</div>
+ <div class="cd" style="--c:var(--wo)"><h3>♀ Women’s parking ${st(g.w,"var(--wo)")}</h3>${g.w[0]} of ${g.w[1]} women-designated spaces available</div>
+ <div class="cd" style="--c:var(--acc)"><h3>♿ Wheelchair access ${st(g.c,"var(--acc)")}</h3>${g.c[0]} of ${g.c[1]} accessible spaces available</div>
+ ${g.pr?`<div class="cd" style="border-color:#d9480f"><h3>🏷 Promotion <span class="promo" style="margin:0;padding:2px 8px;font-size:12px">${g.pr.u}</span></h3><b>${g.pr.t}</b><br>${g.pr.d}</div>`:`<div class="cd"><h3>Promotions</h3>No active promotions</div>`}
+ <div class="cd"><h3>Rates &amp; hours</h3>Hourly ${eur(g.p)}<br>Daily maximum ${eur(g.d)}<br>${hrs(g)} · ${o?"Open now":"Closed now"}</div>
+ <div class="cd"><h3>Amenities</h3><div class="tags">${g.am.map(a=>`<span>${a}</span>`).join("")}</div></div></div>`:""}`}`}
+function toast(t){let e=$("toast");if(!e){e=document.createElement("div");e.id="toast";e.className="toast";e.setAttribute("role","status");$("app").append(e)}e.textContent=t;clearTimeout(toastT);toastT=setTimeout(()=>{e.remove()},7000)}
+function login(){const ov=document.createElement("div");ov.className="ov";const sel=new Set(["car"]),V=[["car","🚗","Normal car","s20"],["ev","🔌","E-car","ev"],["wo","♀","Women’s places","wo"],["ac","♿","Wheelchair access","ac"]];
+ ov.innerHTML=`<div class="dlg" role="dialog" aria-label="Sign in"><h2>Sign in</h2><p>Choose what you park with, and we’ll show matching spaces first.</p>
+ <div class="f" id="fu"><label>Username<input id="u" autocomplete="username"></label><em>Enter your username</em></div>
+ <div class="f" id="fp"><label>Password<input id="pw" type="password" autocomplete="current-password"></label><em>Enter your password</em></div>
+ <div style="font-size:13px;font-weight:600;margin-top:4px">I park with</div><div class="veh">${V.map(v=>`<button data-v="${v[0]}" aria-pressed="${sel.has(v[0])}"><b>${v[1]}</b>${v[2]}</button>`).join("")}</div>
+ <button class="btn" id="si" style="width:100%">Sign in</button>
+ <div class="or">Or continue with</div><div class="soc"><button data-p="Google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.5 5.5 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.09A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28V6.63H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.37l4-3.09z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.23 0 12 0A12 12 0 0 0 1.27 6.63l4 3.09C6.22 6.86 8.87 4.75 12 4.75z"/></svg>Google</button><button data-p="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#0A66C2" d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>LinkedIn</button><button data-p="Apple"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>Apple</button></div>
+ <button id="gst" style="width:100%;margin-top:12px;color:var(--mut);font-size:13px;text-decoration:underline">Continue as guest</button></div>`;
+ $("app").append(ov);
+ const fin=name=>{S.user=name;$("avb").textContent=name[0].toUpperCase();S.f=new Set(V.filter(v=>sel.has(v[0])&&v[3]!=="s20").map(v=>v[3]));if(sel.has("car"))S.f.add("s20");chips();render();ov.remove();toast("Signed in as "+name)};
+ ov.onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.v){sel.has(b.dataset.v)?sel.delete(b.dataset.v):sel.add(b.dataset.v);b.setAttribute("aria-pressed",sel.has(b.dataset.v))}
+  else if(b.dataset.p)fin(b.dataset.p+" user");
+  else if(b.id==="gst")ov.remove();
+  else if(b.id==="si"){const u=$("u").value.trim(),p=$("pw").value;$("fu").classList.toggle("err",!u);$("fp").classList.toggle("err",!p);if(u&&p)fin(u)}};
+}
+let N=null,raf=0,last=0,toastT=0;const M=2.5,fmt=m=>m>=1000?(m/1000).toFixed(1)+" km":Math.round(m)+" m";
+const pathD=g=>"M180 577"+g.rt.map(p=>" L"+p.join(" ")).join("");
+function posAt(d){const c=N.cum,p=N.pts;let i=1;while(i<c.length-1&&c[i]<d)i++;const t=Math.min(1,(d-c[i-1])/(c[i]-c[i-1]||1));return[p[i-1][0]+(p[i][0]-p[i-1][0])*t,p[i-1][1]+(p[i][1]-p[i-1][1])*t]}
+function stopNav(){cancelAnimationFrame(raf);raf=0;N=null;const c=$("car");c.hidden=true;c.classList.remove("near")}
+function selectG(id){if(N&&S.sel!==id){stopNav();toast("Navigation reset")}S.sel=id;S.more=false;S.min=false;render()}
+function place(){const g=G.find(x=>x.id===N.gid),[x,y]=posAt(N.d),rem=(N.total-N.d)*M,c=$("car");c.style.left=x/3.6+"%";c.style.top=y/7.8+"%";$("cl").textContent=fmt(rem);const e=$("rem");if(e)e.textContent=fmt(rem);
+ if(!N.near&&rem<200){N.near=true;c.classList.add("near");toast("Approaching "+g.n)}
+ if(!N.close&&rem<50){N.close=true;toast("You are close. Please confirm your arrival.");render()}}
+function tick(now){if(!N)return;const dt=Math.min(.1,(now-last)/1000);last=now;N.d=Math.min(N.total,N.d+20*dt);place();if(N&&N.d<N.total)raf=requestAnimationFrame(tick)}
+function startNav(){const g=G.find(x=>x.id===S.sel);if(!g)return;stopNav();const p=[[180,577],...g.rt],cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));N={gid:g.id,pts:p,cum,total:cum[cum.length-1],d:0,near:false,close:false,ok:false,booked:false};S.min=true;$("car").hidden=false;toast("Navigation started: "+fmt(N.total*M)+" to "+g.n);render();place();last=performance.now();raf=requestAnimationFrame(tick)}
+function arrive(){if(!N||!N.close)return;N.ok=true;toast("Arrival confirmed. You can now book your parking.");render()}
+function bookIt(){if(!N||!N.ok||N.booked)return;N.booked=true;toast("Parking booked at "+G.find(x=>x.id===N.gid).n);render()}
+function navBox(g){if(!N||N.gid!==g.id)return"";const rem=(N.total-N.d)*M;return `<div class="nv"><span>🚗 Remaining <b id="rem">${fmt(rem)}</b></span><span>${N.ok?"Arrival confirmed":"En route"}</span></div>${N.close&&!N.ok?`<button class="btn" id="arr" style="width:100%;margin-bottom:8px;background:var(--ok);color:var(--on)">I’ve arrived at the parking garage</button>`:""}<button class="btn" id="book" style="width:100%" ${N.ok&&!N.booked?"":"disabled"}>${N.booked?"Parking booked ✓":"Book parking"}</button>`}
+function fab(){$("fab").style.bottom=(S.sel?$("sheet").offsetHeight+14:24)+"px"}
+function render(){pins();sheet();fab()}
+$("chips").onclick=e=>{const k=e.target.dataset.k;if(!k)return;S.f.has(k)?S.f.delete(k):S.f.add(k);chips();render()};
+$("q").oninput=e=>{S.q=e.target.value;render();const m=G.filter(ok);if(m.length===1&&S.q)selectG(m[0].id)};
+$("pins").onclick=e=>{const b=e.target.closest(".pin");if(!b)return;selectG(+b.dataset.id)};
+$("sheet").onclick=e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="more"){S.more=!S.more;render()}if(b.id==="mn"||b.id==="mn2"){S.min=!S.min;render()}if(b.id==="go")startNav();if(b.id==="arr")arrive();if(b.id==="book")bookIt();};
+$("rt").onclick=()=>{if(!S.sel)return toast("Select a garage first");S.route=!S.route;pins()};
+$("loc").onclick=()=>{const m=$("me");m.classList.add("flash");setTimeout(()=>m.classList.remove("flash"),1600);toast("Centered on your location")};
+$("avb").onclick=()=>S.user?(S.user=null,$("avb").textContent="⎘",toast("Signed out")):login();
+chips();render();login();
+</script></body></html>
