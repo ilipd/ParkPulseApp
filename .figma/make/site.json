@@ -1,0 +1,11 @@
+{
+  "title": "ParkPulse",
+  "description": "Displays street maps with nearby parking houses and real-time availability to help users find convenient parking spots quickly and easily.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
